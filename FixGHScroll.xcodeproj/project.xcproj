@@ -129,6 +129,7 @@
     "CURRENT_PROJECT_VERSION": "1",
     "DEBUG_INFORMATION_FORMAT[config=Debug]": "dwarf",
     "DEBUG_INFORMATION_FORMAT[config=Release]": "dwarf-with-dsym",
+    "DEVELOPMENT_TEAM": "74N8K5J2N7",
     "ENABLE_HARDENED_RUNTIME": "YES",
     "ENABLE_NS_ASSERTIONS[config=Release]": "NO",
     "ENABLE_STRICT_OBJC_MSGSEND": "YES",

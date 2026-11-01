@@ -12,9 +12,12 @@ storage, scroll listeners, polling, or mutation observers.
 
 ## Install
 
-1. Open `FixGHScroll.xcodeproj` in Xcode 27.2 or later.
-2. Select your signing team for both targets, then run **FixGHScroll** on your Mac.
+1. Download **FixGHScroll.zip** from the [latest release](https://github.com/julianschiavo/FixGHScroll/releases/latest).
+2. Unzip it, move **FixGHScroll.app** to Applications, and open it.
 3. Click **Open Safari Settings**, enable the extension, and allow it on GitHub.
 4. Reload any GitHub tabs that were already open.
 
 The app can be closed once the extension is enabled.
+
+The app is signed with Developer ID and notarized by Apple. To build from source, open
+`FixGHScroll.xcodeproj` in Xcode 27.2 or later.

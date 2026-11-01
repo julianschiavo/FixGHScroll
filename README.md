@@ -19,5 +19,8 @@ storage, scroll listeners, polling, or mutation observers.
 
 The app can be closed once the extension is enabled.
 
+To hide its toolbar button, Control-click it and choose **Remove Item**. The fix
+keeps working without it.
+
 The app is signed with Developer ID and notarized by Apple. To build from source, open
 `FixGHScroll.xcodeproj` in Xcode 27.2 or later.

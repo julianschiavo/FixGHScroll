@@ -1,3 +1,4 @@
+import AppKit
 import SafariServices
 import SwiftUI
 
@@ -9,18 +10,51 @@ struct SetupView: View {
 
     /// The extension's setup instructions and settings shortcut.
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label("FixGHScroll", systemImage: "arrow.up.and.down").font(.title.bold())
+        VStack(alignment: .leading, spacing: 24) {
+            HStack(spacing: 16) {
+                Image(nsImage: NSApplication.shared.applicationIconImage).resizable().frame(width: 72, height: 72)
+                    .accessibilityHidden(true)
 
-            Text("Keeps GitHub scrolling where you expect.")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("FixGHScroll").font(.title.bold())
+                    Text("Keeps GitHub scrolling where you expect.").foregroundStyle(.secondary).fixedSize(
+                        horizontal: false,
+                        vertical: true
+                    )
+                }
+            }
 
-            Text("Turn on FixGHScroll in Safari and allow it on github.com. Then reload your open GitHub tabs once.")
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 16) {
+                SetupStep(
+                    number: 1,
+                    title: "Enable the extension",
+                    message: "In Safari Settings → Extensions, turn on FixGHScroll."
+                )
+                SetupStep(
+                    number: 2,
+                    title: "Allow GitHub",
+                    message: "Allow access to github.com, then reload your open GitHub tabs."
+                )
+            }
 
-            Button("Open Safari Settings", action: openSafariSettings).buttonStyle(.borderedProminent)
+            HStack(spacing: 16) {
+                Button("Open Safari Settings", action: openSafariSettings).buttonStyle(.borderedProminent).controlSize(
+                    .large
+                )
 
-            if let settingsError { Text(settingsError).font(.callout).foregroundStyle(.red).textSelection(.enabled) }
-        }.padding(24).frame(width: 360)
+                Text("You can quit this app after setup.").font(.callout).foregroundStyle(.secondary).fixedSize(
+                    horizontal: false,
+                    vertical: true
+                )
+            }
+
+            if let settingsError {
+                Text(settingsError).font(.callout).foregroundStyle(.red).textSelection(.enabled).fixedSize(
+                    horizontal: false,
+                    vertical: true
+                )
+            }
+        }.padding(28).frame(width: 480).fixedSize(horizontal: false, vertical: true)
     }
 
     /// Opens the extension's settings in Safari, displaying any error in the setup window.

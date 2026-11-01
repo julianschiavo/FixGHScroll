@@ -1,0 +1,123 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "srgb:0.07843,0.30588,0.65098,1.00000",
+          "srgb:0.03137,0.08235,0.22353,1.00000"
+        ]
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": "system-dark"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Check",
+      "layers": [
+        {
+          "name": "Check",
+          "image-name": "Check.svg",
+          "glass": true
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.65
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "refractivity": {
+        "enabled": true,
+        "depth": 0.2,
+        "strength": 0.4
+      }
+    },
+    {
+      "name": "Ends",
+      "layers": [
+        {
+          "name": "Ends",
+          "image-name": "Ends.svg",
+          "glass": true
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.65
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "refractivity": {
+        "enabled": true,
+        "depth": 0.2,
+        "strength": 0.4
+      }
+    },
+    {
+      "name": "Rolls",
+      "layers": [
+        {
+          "name": "Rolls",
+          "image-name": "Rolls.svg",
+          "glass": true
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.65
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "refractivity": {
+        "enabled": true,
+        "depth": 0.2,
+        "strength": 0.4
+      }
+    },
+    {
+      "name": "Sheet",
+      "layers": [
+        {
+          "name": "Sheet",
+          "image-name": "Sheet.svg",
+          "glass": true
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.65
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "refractivity": {
+        "enabled": true,
+        "depth": 0.12,
+        "strength": 0.25
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}

@@ -1,0 +1,165 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>FixGHScroll Safari checks</title>
+<style>
+    body { font: 16px system-ui; margin: 32px; }
+    li { margin-block: 12px; }
+    iframe { width: 400px; height: 200px; }
+</style>
+<script>
+    // Serve the repository on loopback, then open /Tests/safari.html in Safari.
+    const parameters = new URLSearchParams(location.search);
+    const originalDefine = customElements.define;
+    const metrics = {listeners: 0, observers: 0, frames: 0, timers: 0, microtasks: 0};
+    const originalAPIs = {
+        addEventListener: EventTarget.prototype.addEventListener,
+        MutationObserver,
+        requestAnimationFrame,
+        setTimeout,
+        queueMicrotask
+    };
+    // Count extension-created work, without changing the browser's behavior.
+    EventTarget.prototype.addEventListener = function (...args) {
+        metrics.listeners++;
+        return originalAPIs.addEventListener.apply(this, args);
+    };
+    window.MutationObserver = new Proxy(MutationObserver, {
+        construct(target, args) { metrics.observers++; return Reflect.construct(target, args); }
+    });
+    for (const [name, metric] of [["requestAnimationFrame", "frames"], ["setTimeout", "timers"], ["queueMicrotask", "microtasks"]]) {
+        window[name] = function (...args) {
+            metrics[metric]++;
+            return originalAPIs[name].apply(this, args);
+        };
+    }
+    if (parameters.has("case") && parameters.get("case") !== "control") {
+        document.write('<script src="../Extension/Resources/content.js"><\/script>');
+    }
+</script>
+<script>
+    EventTarget.prototype.addEventListener = originalAPIs.addEventListener;
+    window.MutationObserver = originalAPIs.MutationObserver;
+    window.requestAnimationFrame = originalAPIs.requestAnimationFrame;
+    window.setTimeout = originalAPIs.setTimeout;
+    window.queueMicrotask = originalAPIs.queueMicrotask;
+</script>
+<script src="CheckStep.js"></script>
+<h1>FixGHScroll Safari checks</h1>
+<ol id="results"></ol>
+<script>
+    "use strict";
+
+    const cases = [
+        ["control", "Control reproduces the jump"],
+        ["detached", "Detached open steps stop scrolling the page"],
+        ["preview", "Closing an embedded preview clears its open step"],
+        ["navigation", "Replacing the body clears detached steps without reloading"],
+        ["reparent", "Moving a connected step preserves its open state"],
+        ["lines", "Updating log lines preserves the active viewer"],
+        ["closed", "Closed steps retain their lifecycle callback"],
+        ["unrelated", "Unrelated custom elements retain their callbacks"],
+        ["performance", "No listeners, observers, timers, frames, or ongoing definition hook"]
+    ];
+    const settle = () => new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+
+    async function runCase(name) {
+        document.body.style.height = "8000px";
+        const step = document.createElement("check-step");
+        const details = document.createElement("details");
+        details.className = "js-checks-log-details";
+        details.open = name !== "closed";
+        const lines = document.createElement("div");
+        lines.textContent = "Log lines";
+        details.append(lines);
+        step.append(details);
+        const viewer = document.createElement("section");
+        viewer.className = "content-preview-content";
+        viewer.append(step);
+        document.body.append(viewer);
+        let unrelatedCalls = 0;
+
+        // Model GitHub's retained step and isOpen check: an open detached step's
+        // saved height is incorrectly applied to the document's scroll position.
+        document.addEventListener("scroll", () => {
+            if (!step.isConnected && details.hasAttribute("open")) {
+                document.documentElement.scrollTop = document.documentElement.scrollHeight;
+            }
+        });
+
+        if (["control", "detached", "closed"].includes(name)) {
+            step.remove();
+        } else if (name === "preview") {
+            viewer.remove();
+        } else if (name === "navigation") {
+            const body = document.createElement("body");
+            body.style.height = "8000px";
+            document.body.replaceWith(body);
+        } else if (name === "reparent") {
+            const destination = document.createElement("section");
+            document.body.append(destination);
+            destination.append(step);
+        } else if (name === "lines") {
+            lines.replaceChildren(document.createTextNode("Updated log lines"));
+        } else if (name === "unrelated") {
+            customElements.define("unrelated-element", class extends HTMLElement {
+                disconnectedCallback() { unrelatedCalls++; }
+            });
+            const unrelated = document.createElement("unrelated-element");
+            document.body.append(unrelated);
+            unrelated.remove();
+        } else if (name === "performance") {
+            for (let index = 0; index < 10000; index++) lines.textContent = String(index);
+            for (let index = 0; index < 200; index++) document.dispatchEvent(new Event("scroll"));
+        }
+
+        await Promise.resolve();
+        window.scrollTo(0, 35);
+        await settle();
+        const detached = !step.isConnected;
+        const atBottom = scrollY === document.documentElement.scrollHeight - innerHeight;
+        const stateIsCorrect = detached ? !details.open : details.open;
+        const originalCallbackRan = step.disconnectCount === (detached || name === "reparent" ? 1 : 0);
+        const isQuiet = Object.values(metrics).every(value => value === 0);
+        const passed = name === "control" ? atBottom :
+            scrollY === 35 && stateIsCorrect && originalCallbackRan &&
+            customElements.define === originalDefine && isQuiet &&
+            (name !== "unrelated" || unrelatedCalls === 1);
+        parent.postMessage({name, passed, detail: `scrollY=${scrollY}; background work=${JSON.stringify(metrics)}`}, location.origin);
+    }
+
+    if (parameters.has("case")) {
+        runCase(parameters.get("case")).catch(error => {
+            parent.postMessage({name: parameters.get("case"), passed: false, detail: String(error)}, location.origin);
+        });
+    } else {
+        (async () => {
+            for (const [name, label] of cases) {
+                const frame = document.createElement("iframe");
+                const result = new Promise(resolve => {
+                    const receive = event => {
+                        if (event.origin !== location.origin || event.source !== frame.contentWindow || event.data.name !== name) return;
+                        removeEventListener("message", receive);
+                        clearTimeout(timeout);
+                        resolve(event.data);
+                    };
+                    const timeout = setTimeout(() => {
+                        removeEventListener("message", receive);
+                        resolve({passed: false, detail: "Timed out"});
+                    }, 5000);
+                    addEventListener("message", receive);
+                });
+                frame.src = `?case=${name}`;
+                document.body.append(frame);
+                const {passed, detail} = await result;
+                const item = document.createElement("li");
+                item.textContent = `${passed ? "PASS" : "FAIL"}: ${label} (${detail})`;
+                document.querySelector("#results").append(item);
+                frame.remove();
+            }
+            document.title = [...document.querySelectorAll("li")].every(item => item.textContent.startsWith("PASS"))
+                ? "PASS — FixGHScroll Safari checks" : "FAIL — FixGHScroll Safari checks";
+        })();
+    }
+</script>
